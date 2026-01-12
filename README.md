@@ -112,9 +112,10 @@ Optional fields (based on vehicle type):
 gcc main.c -o vehicle
 ./vehicle
 
----
 
-##Developer:
-** MD Razwanul Islam  
-Begum Rokeya University, Rangpur
+
+## Developer
+
+**Md Razwanul Islam**  
+Begum Rokeya University, Rangpur  
 16th Batch
