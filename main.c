@@ -5,8 +5,9 @@
 
 #define MAX 100
 
+// STRUCT
 struct Vehicle {
-    int id;
+    char id[6];                 // V001
     char type[20];
     char model[30];
     char brand[30];
@@ -20,8 +21,9 @@ struct Vehicle {
 
 struct Vehicle vehicles[MAX];
 int count = 0;
+int autoID = 1;
 
-/* function declarations */
+// FUNCTION DECLARATIONS 
 void showMenu();
 void addNewVehicle();
 void showVehicles();
@@ -30,19 +32,22 @@ void updateVehicle();
 void deleteVehicle();
 void filterVehicles();
 
-/* helper */
-void toLowerCase(char str[]) {
-    for (int i = 0; str[i]; i++)
-        str[i] = tolower(str[i]);
-}
+// helpers 
+void toLowerCase(char str[]);
+void clearInputBuffer();
+void generateID(char id[]);
 
+// MAIN 
 int main() {
     int choice;
 
     while (1) {
         showMenu();
         printf("Enter choice: ");
-        scanf("%d", &choice);
+        if (scanf("%d", &choice) != 1) {
+            clearInputBuffer();
+            continue;
+        }
 
         switch (choice) {
             case 1: addNewVehicle(); break;
@@ -61,6 +66,8 @@ int main() {
     return 0;
 }
 
+// FUNCTIONS 
+
 void showMenu() {
     printf("\n===== Vehicle Management System =====\n");
     printf("1. Add New Vehicle\n");
@@ -72,33 +79,35 @@ void showMenu() {
     printf("0. Exit\n");
 }
 
+void generateID(char id[]) {
+    sprintf(id, "V%03d", autoID++);
+}
+
+void toLowerCase(char str[]) {
+    for (int i = 0; str[i]; i++)
+        str[i] = tolower(str[i]);
+}
+
+void clearInputBuffer() {
+    int c;
+    while ((c = getchar()) != '\n' && c != EOF);
+}
+
 void addNewVehicle() {
     struct Vehicle v;
-    int duplicate = 0;
 
     if (count >= MAX) {
         printf("Vehicle limit reached!\n");
         return;
     }
 
-    /* initialize */
+    // initialize 
     v.seatCount = 0;
     v.gearCount = 0;
     strcpy(v.routeNumber, "N/A");
 
-    printf("Enter Vehicle ID: ");
-    scanf("%d", &v.id);
-
-    for (int i = 0; i < count; i++) {
-        if (vehicles[i].id == v.id) {
-            duplicate = 1;
-            break;
-        }
-    }
-    if (duplicate) {
-        printf("Vehicle ID already exists!\n");
-        return;
-    }
+    generateID(v.id);
+    printf("Generated Vehicle ID: %s\n", v.id);
 
     printf("Enter Vehicle Type (car/bike/bus/truck): ");
     scanf("%s", v.type);
@@ -119,10 +128,18 @@ void addNewVehicle() {
     scanf(" %[^\n]", v.brand);
 
     printf("Enter Year of Manufacture: ");
-    scanf("%d", &v.year);
+    if (scanf("%d", &v.year) != 1) {
+        printf("Invalid year input!\n");
+        clearInputBuffer();
+        return;
+    }
 
     printf("Enter Engine Capacity (cc): ");
-    scanf("%d", &v.engineCC);
+    if (scanf("%d", &v.engineCC) != 1) {
+        printf("Invalid engine CC!\n");
+        clearInputBuffer();
+        return;
+    }
 
     if (strcmp(v.type, "car") == 0) {
         printf("Enter Seat Count: ");
@@ -149,10 +166,13 @@ void showVehicles() {
 
     for (int i = 0; i < count; i++) {
         printf("\n--- Vehicle %d ---\n", i + 1);
-        printf("ID: %d\nType: %s\nModel: %s\nBrand: %s\nYear: %d\nEngine: %dcc\n",
-               vehicles[i].id, vehicles[i].type,
-               vehicles[i].model, vehicles[i].brand,
-               vehicles[i].year, vehicles[i].engineCC);
+        printf("ID: %s\nType: %s\nModel: %s\nBrand: %s\nYear: %d\nEngine: %dcc\n",
+               vehicles[i].id,
+               vehicles[i].type,
+               vehicles[i].model,
+               vehicles[i].brand,
+               vehicles[i].year,
+               vehicles[i].engineCC);
 
         if (strcmp(vehicles[i].type,"car")==0)
             printf("Seats: %d\n", vehicles[i].seatCount);
@@ -164,18 +184,18 @@ void showVehicles() {
 }
 
 void searchVehicle() {
-    int option, id, found = 0;
-    char key[30];
+    int option, found = 0;
+    char key[30], id[6];
 
     printf("\nSearch By:\n1. Vehicle ID\n2. Type or Model\nEnter option: ");
     scanf("%d", &option);
 
     if (option == 1) {
-        printf("Enter ID: ");
-        scanf("%d", &id);
+        printf("Enter Vehicle ID: ");
+        scanf("%s", id);
 
         for (int i = 0; i < count; i++) {
-            if (vehicles[i].id == id) {
+            if (strcmp(vehicles[i].id, id) == 0) {
                 printf("Found: %s %s (%d)\n",
                        vehicles[i].brand,
                        vehicles[i].model,
@@ -198,7 +218,7 @@ void searchVehicle() {
             toLowerCase(m);
 
             if (strcmp(t,key)==0 || strcmp(m,key)==0) {
-                printf("ID:%d %s %s\n",
+                printf("ID:%s %s %s\n",
                        vehicles[i].id,
                        vehicles[i].brand,
                        vehicles[i].model);
@@ -212,14 +232,14 @@ void searchVehicle() {
 }
 
 void updateVehicle() {
-    int id;
+    char id[6];
     printf("Enter Vehicle ID: ");
-    scanf("%d", &id);
+    scanf("%s", id);
 
     for (int i = 0; i < count; i++) {
-        if (vehicles[i].id == id) {
-            printf("1.Brand 2.Model 3.Year 4.Engine CC\nChoice: ");
+        if (strcmp(vehicles[i].id, id) == 0) {
             int ch;
+            printf("1.Brand 2.Model 3.Year 4.Engine CC\nChoice: ");
             scanf("%d", &ch);
 
             if (ch == 1) scanf(" %[^\n]", vehicles[i].brand);
@@ -239,43 +259,45 @@ void updateVehicle() {
 }
 
 void deleteVehicle() {
-    int id, pos = -1;
+    char id[6];
+    int pos = -1;
+
     printf("Enter Vehicle ID: ");
-    scanf("%d", &id);
+    scanf("%s", id);
 
     for (int i = 0; i < count; i++) {
-        if (vehicles[i].id == id) {
+        if (strcmp(vehicles[i].id, id) == 0) {
             pos = i;
             break;
         }
     }
+
     if (pos == -1) {
         printf("Vehicle not found!\n");
         return;
     }
 
-    for (int i = pos; i < count-1; i++)
-        vehicles[i] = vehicles[i+1];
+    for (int i = pos; i < count - 1; i++)
+        vehicles[i] = vehicles[i + 1];
 
     count--;
     printf("Vehicle deleted successfully!\n");
 }
 
 void filterVehicles() {
-    int option;
+    int option, found = 0;
+
     printf("\n1.Year & CC  2.Type  3.Brand\nChoice: ");
     scanf("%d", &option);
-
-    int found = 0;
 
     if (option == 1) {
         int y, cc;
         printf("Year > "); scanf("%d",&y);
         printf("CC > "); scanf("%d",&cc);
 
-        for (int i=0;i<count;i++)
-            if (vehicles[i].year>y && vehicles[i].engineCC>cc) {
-                printf("%d %s %s\n",
+        for (int i = 0; i < count; i++)
+            if (vehicles[i].year > y && vehicles[i].engineCC > cc) {
+                printf("%s %s %s\n",
                        vehicles[i].id,
                        vehicles[i].brand,
                        vehicles[i].model);
@@ -287,9 +309,11 @@ void filterVehicles() {
         scanf("%s", type);
         toLowerCase(type);
 
-        for (int i=0;i<count;i++)
-            if (strcmp(vehicles[i].type,type)==0) {
-                printf("%d %s\n", vehicles[i].id, vehicles[i].model);
+        for (int i = 0; i < count; i++)
+            if (strcmp(vehicles[i].type, type) == 0) {
+                printf("%s %s\n",
+                       vehicles[i].id,
+                       vehicles[i].model);
                 found = 1;
             }
     }
@@ -297,9 +321,11 @@ void filterVehicles() {
         char brand[30];
         scanf(" %[^\n]", brand);
 
-        for (int i=0;i<count;i++)
-            if (strcmp(vehicles[i].brand,brand)==0) {
-                printf("%d %s\n", vehicles[i].id, vehicles[i].model);
+        for (int i = 0; i < count; i++)
+            if (strcmp(vehicles[i].brand, brand) == 0) {
+                printf("%s %s\n",
+                       vehicles[i].id,
+                       vehicles[i].model);
                 found = 1;
             }
     }
